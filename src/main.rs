@@ -1,4 +1,5 @@
 pub mod color;
+pub mod vector;
 use color_eyre::Result;
 use std::time::Duration;
 
@@ -12,7 +13,7 @@ fn initialize_window(video: VideoSubsystem) -> video::Window {
         .unwrap()
 }
 
-fn get_chessboard_color_for_pixel(x: u16, y: u16) -> color::Color {
+fn get_pixel_color_for_coordinates_chessboard(x: u16, y: u16) -> color::Color {
     let checker_size = 64;
     let x_odd = x % (2 * checker_size) < checker_size;
     let y_odd = y % (2 * checker_size) < checker_size;
@@ -38,7 +39,7 @@ fn main() -> Result<()> {
     'running: loop {
         for x in 0..1024 {
             for y in 0..768 {
-                let pixel_color = get_chessboard_color_for_pixel(x, y);
+                let pixel_color = get_pixel_color_for_coordinates_chessboard(x, y);
                 canvas.set_draw_color(&pixel_color);
 
                 canvas.draw_point((x as i32, y as i32)).unwrap_or_else(|_| {
