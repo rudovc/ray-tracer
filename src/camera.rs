@@ -26,7 +26,11 @@ impl Camera {
         };
 
         let direction = Vector3D::from(&position).to(&look_at).unit();
-        let right = vector::Y.cross(&direction).unit().scale(width as f32 / 2.);
+
+        let right = vector::Y.cross(&direction);
+
+        let right = right.unit().scale(width as f32 / 2.);
+
         let up = right
             .cross(&direction)
             .invert()

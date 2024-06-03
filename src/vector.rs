@@ -22,7 +22,7 @@ pub struct FromToVector3D {
 
 impl FromToVector3D {
     pub fn to(&self, destination: &Vector3D) -> Vector3D {
-        self.from.subtract(destination)
+        destination.subtract(&self.from)
     }
 }
 
@@ -31,8 +31,8 @@ pub struct Vector3D {
     x: i32,
     y: i32,
     z: i32,
-    len: Lazy<i32>,
-    squid: Lazy<i32>,
+    len: Lazy<f64>,
+    squid: Lazy<u64>,
 }
 
 impl std::fmt::Display for Vector3D {
@@ -93,13 +93,17 @@ impl Vector3D {
         self.z as f32 / 1000.
     }
 
-    fn length(&self) -> i32 {
-        self.len.get_or_init(self.squid())
+    fn length(&self) -> f64 {
+        self.len
+            .get_or_init(self.len.get_or_init((self.squid() as f64).sqrt()))
     }
 
-    fn squid(&self) -> i32 {
-        self.squid
-            .get_or_init((self.x).pow(2) + (self.y).pow(2) + (self.z).pow(2))
+    fn squid(&self) -> u64 {
+        self.squid.get_or_init(
+            (self.x.unsigned_abs() as u64).pow(2) / 1000
+                + (self.y.unsigned_abs() as u64).pow(2) / 1000
+                + (self.z.unsigned_abs() as u64).pow(2) / 1000,
+        )
     }
 
     pub fn dot(&self, operand: &Vector3D) -> i32 {
@@ -118,6 +122,16 @@ impl Vector3D {
 
     pub fn divide(&self, divisor: f32) -> Vector3D {
         let divisor = (divisor * 1000.) as i32;
+
+        if divisor == 0 {
+            return Vector3D {
+                x: 0,
+                y: 0,
+                z: 0,
+                len: Lazy::Lazy(OnceCell::new()),
+                squid: Lazy::Lazy(OnceCell::new()),
+            };
+        }
 
         Vector3D {
             x: self.x / divisor,
@@ -201,30 +215,30 @@ pub const X: Vector3D = Vector3D {
     x: 1i32,
     y: 0i32,
     z: 0i32,
-    len: Lazy::Eager(1i32),
-    squid: Lazy::Eager(1i32),
+    len: Lazy::Eager(1f64),
+    squid: Lazy::Eager(1u64),
 };
 
 pub const Y: Vector3D = Vector3D {
     x: 0i32,
     y: 1i32,
     z: 0i32,
-    len: Lazy::Eager(1i32),
-    squid: Lazy::Eager(1i32),
+    len: Lazy::Eager(1f64),
+    squid: Lazy::Eager(1u64),
 };
 
 pub const Z: Vector3D = Vector3D {
     x: 0i32,
     y: 0i32,
     z: 1i32,
-    len: Lazy::Eager(1i32),
-    squid: Lazy::Eager(1i32),
+    len: Lazy::Eager(1f64),
+    squid: Lazy::Eager(1u64),
 };
 
 pub const O: Vector3D = Vector3D {
     x: 0i32,
     y: 0i32,
     z: 0i32,
-    len: Lazy::Eager(0i32),
-    squid: Lazy::Eager(0i32),
+    len: Lazy::Eager(0f64),
+    squid: Lazy::Eager(0u64),
 };

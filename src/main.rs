@@ -7,7 +7,7 @@ pub mod vector;
 use camera::Camera;
 use color::Color;
 use color_eyre::Result;
-use renderer::Renderer;
+use renderer::{Coordinates2D, Renderer};
 use scene::Scene;
 use std::time::Duration;
 use vector::Vector3D;
@@ -34,7 +34,7 @@ fn get_pixel_color_for_coordinates_chessboard(x: u16, y: u16) -> color::Color {
     }
 }
 
-fn paint_pixel(canvas: &mut Canvas<sdl2::video::Window>, x: u16, y: u16, color: Color) {
+fn paint_pixel(canvas: &mut Canvas<sdl2::video::Window>, (x, y): Coordinates2D, color: Color) {
     canvas.set_draw_color(color);
     canvas
         .draw_point((x as i32, y as i32))
@@ -58,6 +58,7 @@ fn main() -> Result<()> {
         1024,
         768,
     );
+
     let scene = Scene::new(camera, color::BLUE);
     let renderer = Renderer::new(1024, 768);
 

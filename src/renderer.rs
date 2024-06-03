@@ -2,6 +2,8 @@ use sdl2::render::Canvas;
 
 use crate::{color::Color, scene::Scene};
 
+pub type Coordinates2D = (u16, u16);
+
 pub struct Renderer {
     canvas_width: u16,
     canvas_height: u16,
@@ -19,7 +21,7 @@ impl Renderer {
         &self,
         canvas: &mut Canvas<sdl2::video::Window>,
         scene: &Scene,
-        paint_callback: &dyn Fn(&mut Canvas<sdl2::video::Window>, u16, u16, Color),
+        paint_callback: &dyn Fn(&mut Canvas<sdl2::video::Window>, Coordinates2D, Color),
     ) {
         for pixel_y in 0..self.canvas_height {
             for pixel_x in 0..self.canvas_width {
@@ -28,7 +30,7 @@ impl Renderer {
 
                 let pixel_color = scene.trace(scene_x as i32, scene_y as i32);
 
-                paint_callback(canvas, pixel_x, pixel_y, pixel_color);
+                paint_callback(canvas, (pixel_x, pixel_y), pixel_color);
             }
         }
     }
