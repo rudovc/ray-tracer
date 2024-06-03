@@ -111,6 +111,18 @@ impl From<(u8, u8, u8)> for Color {
     }
 }
 
+impl From<&Color> for Color {
+    fn from(color: &Color) -> Self {
+        color.clone()
+    }
+}
+
+impl From<Color> for sdl2::pixels::Color {
+    fn from(color: Color) -> Self {
+        sdl2::pixels::Color::RGB(color.r, color.g, color.b)
+    }
+}
+
 impl From<&Color> for sdl2::pixels::Color {
     fn from(color: &Color) -> Self {
         sdl2::pixels::Color::RGB(color.r, color.g, color.b)

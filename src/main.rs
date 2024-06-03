@@ -3,10 +3,11 @@ pub mod color;
 pub mod ray;
 pub mod scene;
 pub mod vector;
+use color::Color;
 use color_eyre::Result;
 use std::time::Duration;
 
-use sdl2::{event::Event, keyboard::Keycode, video, VideoSubsystem};
+use sdl2::{event::Event, keyboard::Keycode, render::Canvas, video, VideoSubsystem};
 
 fn initialize_window(video: VideoSubsystem) -> video::Window {
     video
@@ -28,6 +29,13 @@ fn get_pixel_color_for_coordinates_chessboard(x: u16, y: u16) -> color::Color {
     }
 }
 
+fn paint_pixel(canvas: &mut Canvas<sdl2::video::Window>, x: u16, y: u16, color: Color) {
+    canvas.set_draw_color(color);
+    canvas
+        .draw_point((x as i32, y as i32))
+        .unwrap_or_else(|_| panic!("Could not draw color {color:?} to point {x}, {y}."));
+}
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
@@ -43,11 +51,8 @@ fn main() -> Result<()> {
         for x in 0..1024 {
             for y in 0..768 {
                 let pixel_color = get_pixel_color_for_coordinates_chessboard(x, y);
-                canvas.set_draw_color(&pixel_color);
 
-                canvas.draw_point((x as i32, y as i32)).unwrap_or_else(|_| {
-                    panic!("Could not draw color {pixel_color:?} to point {x}, {y}.")
-                });
+                paint_pixel(&mut canvas, x, y, pixel_color);
             }
         }
 
