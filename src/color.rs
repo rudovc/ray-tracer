@@ -1,7 +1,7 @@
 use color_eyre::eyre::{eyre, Result};
 use regex::Regex;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct Color {
     r: u8,
     g: u8,
@@ -9,15 +9,15 @@ pub struct Color {
 }
 
 impl Color {
-    fn new(r: u8, g: u8, b: u8) -> Self {
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
         Color { r, g, b }
     }
 
-    fn rgba(&self) -> [u8; 4] {
+    pub fn rgba(&self) -> [u8; 4] {
         [self.r, self.g, self.b, 0xff]
     }
 
-    fn add(&self, addend: Color) -> Self {
+    pub fn add(&self, addend: Color) -> Self {
         Color {
             r: self.r + addend.r,
             g: self.g + addend.g,
@@ -25,7 +25,7 @@ impl Color {
         }
     }
 
-    fn multiply(&self, multiplier: Color) -> Self {
+    pub fn multiply(&self, multiplier: Color) -> Self {
         Color {
             r: ((self.r * multiplier.r) / 0xff),
             g: ((self.g * multiplier.g) / 0xff),
@@ -33,7 +33,7 @@ impl Color {
         }
     }
 
-    fn scale(&self, factor: f64) -> Result<Self> {
+    pub fn scale(&self, factor: f64) -> Result<Self> {
         if factor < 0 as f64 {
             Err(eyre!("Can't scale color values by negative amount"))
         } else {
@@ -46,7 +46,7 @@ impl Color {
     }
 
     // Parse hex colors like #fff, #abc123
-    fn parse(color: impl Into<String>) -> Result<Self> {
+    pub fn parse(color: impl Into<String>) -> Result<Self> {
         let color: String = color.into().replace(' ', "");
 
         match color.chars().count() {

@@ -1,7 +1,7 @@
 use color_eyre::eyre::{eyre, Result};
 use std::cell::OnceCell;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Lazy<T> {
     Lazy(OnceCell<T>),
     Eager(T),
@@ -21,12 +21,12 @@ pub struct FromToVector3D {
 }
 
 impl FromToVector3D {
-    pub fn to(&self, destination: Vector3D) -> Vector3D {
+    pub fn to(&self, destination: &Vector3D) -> Vector3D {
         self.from.subtract(destination)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vector3D {
     x: i32,
     y: i32,
@@ -42,7 +42,7 @@ impl std::fmt::Display for Vector3D {
 }
 
 impl Vector3D {
-    fn new(x: i32, y: i32, z: i32) -> Self {
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
         Vector3D {
             x,
             y,
@@ -52,7 +52,7 @@ impl Vector3D {
         }
     }
 
-    fn try_new(x: f32, y: f32, z: f32) -> Result<Self> {
+    pub fn try_new(x: f32, y: f32, z: f32) -> Result<Self> {
         let (x, y, z) = ((x * 1000.) as i64, (y * 1000.) as i64, (z * 1000.) as i64);
 
         if x.abs() > i32::MAX as i64 || y.abs() > i32::MAX as i64 || z.abs() > i32::MAX as i64 {
@@ -71,14 +71,25 @@ impl Vector3D {
         }
     }
 
-    pub fn x(&self) -> f32 {
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+    pub fn z(&self) -> i32 {
+        self.z
+    }
+
+    fn x_float(&self) -> f32 {
         self.x as f32 / 1000.
     }
 
-    pub fn y(&self) -> f32 {
+    fn y_float(&self) -> f32 {
         self.y as f32 / 1000.
     }
-    pub fn z(&self) -> f32 {
+    fn z_float(&self) -> f32 {
         self.z as f32 / 1000.
     }
 
@@ -91,11 +102,11 @@ impl Vector3D {
             .get_or_init((self.x).pow(2) + (self.y).pow(2) + (self.z).pow(2))
     }
 
-    pub fn dot(&self, operand: Vector3D) -> i32 {
+    pub fn dot(&self, operand: &Vector3D) -> i32 {
         ((self.x * operand.x) + (self.y * operand.y) + (self.z * operand.z)) / 1000
     }
 
-    pub fn cross(&self, operand: Vector3D) -> Vector3D {
+    pub fn cross(&self, operand: &Vector3D) -> Vector3D {
         Vector3D {
             x: self.y * operand.z - self.z * operand.y,
             y: operand.z * self.x - self.x * operand.z,
@@ -131,7 +142,7 @@ impl Vector3D {
         }
     }
 
-    pub fn add(&self, addend: Vector3D) -> Self {
+    pub fn add(&self, addend: &Vector3D) -> Self {
         Vector3D {
             x: self.x + addend.x,
             y: self.y + addend.y,
@@ -141,7 +152,7 @@ impl Vector3D {
         }
     }
 
-    pub fn subtract(&self, subtrahend: Vector3D) -> Self {
+    pub fn subtract(&self, subtrahend: &Vector3D) -> Self {
         Vector3D {
             x: self.x - subtrahend.x,
             y: self.y - subtrahend.y,
@@ -163,33 +174,54 @@ impl Vector3D {
         }
     }
 
-    pub fn from(origin: Vector3D) -> FromToVector3D {
-        FromToVector3D { from: origin }
+    pub fn to(&self, destination: &Vector3D) -> Self {
+        self.subtract(destination)
+    }
+
+    pub fn from(origin: &Vector3D) -> FromToVector3D {
+        FromToVector3D {
+            from: origin.into(),
+        }
     }
 }
 
-const X: Vector3D = Vector3D {
+impl From<&Vector3D> for Vector3D {
+    fn from(value: &Vector3D) -> Self {
+        Vector3D {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            len: Lazy::Lazy(OnceCell::new()),
+            squid: Lazy::Lazy(OnceCell::new()),
+        }
+    }
+}
+
+pub const X: Vector3D = Vector3D {
     x: 1i32,
     y: 0i32,
     z: 0i32,
     len: Lazy::Eager(1i32),
     squid: Lazy::Eager(1i32),
 };
-const Y: Vector3D = Vector3D {
+
+pub const Y: Vector3D = Vector3D {
     x: 0i32,
     y: 1i32,
     z: 0i32,
     len: Lazy::Eager(1i32),
     squid: Lazy::Eager(1i32),
 };
-const Z: Vector3D = Vector3D {
+
+pub const Z: Vector3D = Vector3D {
     x: 0i32,
     y: 0i32,
     z: 1i32,
     len: Lazy::Eager(1i32),
     squid: Lazy::Eager(1i32),
 };
-const O: Vector3D = Vector3D {
+
+pub const O: Vector3D = Vector3D {
     x: 0i32,
     y: 0i32,
     z: 0i32,
