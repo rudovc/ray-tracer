@@ -15,7 +15,7 @@ impl Scene {
         self.background
     }
 
-    pub fn trace(&self, x: u16, y: u16) -> Color {
+    pub fn trace(&self, x: i32, y: i32) -> Color {
         self.camera.trace(self, x, y)
     }
 }

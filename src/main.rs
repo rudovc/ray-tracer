@@ -1,11 +1,16 @@
 pub mod camera;
 pub mod color;
 pub mod ray;
+pub mod renderer;
 pub mod scene;
 pub mod vector;
+use camera::Camera;
 use color::Color;
 use color_eyre::Result;
+use renderer::Renderer;
+use scene::Scene;
 use std::time::Duration;
+use vector::Vector3D;
 
 use sdl2::{event::Event, keyboard::Keycode, render::Canvas, video, VideoSubsystem};
 
@@ -47,14 +52,17 @@ fn main() -> Result<()> {
     let mut canvas = window.into_canvas().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    'running: loop {
-        for x in 0..1024 {
-            for y in 0..768 {
-                let pixel_color = get_pixel_color_for_coordinates_chessboard(x, y);
+    let camera = Camera::new(
+        Vector3D::try_new(-4., 1., -5.).unwrap(),
+        vector::O,
+        1024,
+        768,
+    );
+    let scene = Scene::new(camera, color::BLUE);
+    let renderer = Renderer::new(1024, 768);
 
-                paint_pixel(&mut canvas, x, y, pixel_color);
-            }
-        }
+    'running: loop {
+        renderer.render(&mut canvas, &scene, &paint_pixel);
 
         for event in event_pump.poll_iter() {
             match event {

@@ -45,12 +45,12 @@ impl Camera {
         }
     }
 
-    pub fn trace(&self, scene: &Scene, x: u16, y: u16) -> Color {
+    pub fn trace(&self, scene: &Scene, x: i32, y: i32) -> Color {
         let vx = self.right.scale(x as f32);
         let vy = self.right.scale(y as f32).invert();
         let r = self.direction.add(&vx).add(&vy);
         let ray = Ray::new(&self.position, &r);
 
-        return ray.trace(scene);
+        ray.trace(scene)
     }
 }
