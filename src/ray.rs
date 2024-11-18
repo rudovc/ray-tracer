@@ -1,8 +1,8 @@
 use crate::{color::Color, scene::Scene, vector::Vector3D};
 
 pub struct Ray {
-    start: Vector3D,
-    direction: Vector3D,
+    pub start: Vector3D,
+    pub direction: Vector3D,
 }
 
 impl Ray {

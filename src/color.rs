@@ -34,7 +34,7 @@ impl Color {
     }
 
     pub fn scale(&self, factor: f64) -> Result<Self> {
-        if factor < 0 as f64 {
+        if factor < 0. {
             Err(eyre!("Can't scale color values by negative amount"))
         } else {
             Ok(Color {

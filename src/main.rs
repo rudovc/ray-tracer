@@ -1,8 +1,10 @@
 pub mod camera;
 pub mod color;
+pub mod lazy;
 pub mod ray;
 pub mod renderer;
 pub mod scene;
+pub mod shape;
 pub mod vector;
 use camera::Camera;
 use color::Color;
@@ -20,18 +22,6 @@ fn initialize_window(video: VideoSubsystem) -> video::Window {
         .position_centered()
         .build()
         .unwrap()
-}
-
-fn get_pixel_color_for_coordinates_chessboard(x: u16, y: u16) -> color::Color {
-    let checker_size = 64;
-    let x_odd = x % (2 * checker_size) < checker_size;
-    let y_odd = y % (2 * checker_size) < checker_size;
-
-    if x_odd != y_odd {
-        color::WHITE
-    } else {
-        color::BLACK
-    }
 }
 
 fn paint_pixel(canvas: &mut Canvas<sdl2::video::Window>, (x, y): Coordinates2D, color: Color) {

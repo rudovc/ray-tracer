@@ -5,10 +5,12 @@ use crate::{
     {vector, vector::Vector3D},
 };
 
+pub type Resolution = (u16, u16);
+
 #[derive(Debug)]
 pub struct Camera {
     position: Vector3D,
-    look_at: Vector3D,
+    target: Vector3D,
     direction: Vector3D,
     width: u16,
     height: u16,
@@ -29,17 +31,17 @@ impl Camera {
 
         let right = vector::Y.cross(&direction);
 
-        let right = right.unit().scale(width as f32 / 2.);
+        let right = right.unit().scale(width as f64 / 2.);
 
         let up = right
             .cross(&direction)
             .invert()
             .unit()
-            .scale(height as f32 / 2.);
+            .scale(height as f64 / 2.);
 
         Camera {
             position,
-            look_at,
+            target: look_at,
             direction,
             width,
             height,
@@ -50,11 +52,15 @@ impl Camera {
     }
 
     pub fn trace(&self, scene: &Scene, x: i32, y: i32) -> Color {
-        let vx = self.right.scale(x as f32);
-        let vy = self.right.scale(y as f32).invert();
+        let vx = self.right.scale(x as f64);
+        let vy = self.right.scale(y as f64).invert();
         let r = self.direction.add(&vx).add(&vy);
         let ray = Ray::new(&self.position, &r);
 
         ray.trace(scene)
+    }
+
+    pub fn resolution(&self) -> Resolution {
+        (self.width, self.height)
     }
 }
