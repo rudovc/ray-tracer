@@ -1,13 +1,10 @@
 const THRESHOLD: f64 = f64::EPSILON * 3.;
 
+use std::cmp::Ordering;
+
 use crate::{color::Color, ray::Ray, vector::Vector3D};
 
-pub enum Intersection {
-    NONE,
-    TANGENT(f64),
-    PIERCE([f64; 2]),
-}
-
+#[derive(Debug)]
 pub struct Body {
     color: Color,
 }
@@ -19,9 +16,11 @@ impl Body {
 }
 
 pub trait Volume {
-    fn intersect(&self, ray: Ray) -> Intersection;
+    fn closest_ray_point(&self, ray: &Ray) -> Option<f64>;
+    fn intersect(&self, ray: &Ray) -> Vec<f64>;
 }
 
+#[derive(Debug)]
 pub struct Sphere {
     body: Body,
     center: Vector3D,
@@ -39,7 +38,7 @@ impl Sphere {
 }
 
 impl Volume for Sphere {
-    fn intersect(&self, ray: Ray) -> Intersection {
+    fn intersect(&self, ray: &Ray) -> Vec<f64> {
         // For this system, the sphere's center is the origin
         let ray_start_coordinate = Vector3D::from(&self.center).to(&ray.start);
 
@@ -49,12 +48,21 @@ impl Volume for Sphere {
         let discriminant = b * b - 4. * c;
 
         if discriminant < 0. {
-            Intersection::NONE
-        } else if discriminant.abs() <= THRESHOLD {
-            Intersection::TANGENT(discriminant)
+            vec![]
+        } else if discriminant == 0. {
+            vec![discriminant]
         } else {
             let root = discriminant.sqrt();
-            Intersection::PIERCE([(-b - root) / 2., (-b + root) / 2.])
+            vec![(-b - root) / 2., (-b + root) / 2.]
         }
+    }
+
+    fn closest_ray_point(&self, ray: &Ray) -> Option<f64> {
+        let distances = self
+            .intersect(ray)
+            .into_iter()
+            .filter(|distance| *distance > THRESHOLD);
+
+        distances.min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Greater))
     }
 }

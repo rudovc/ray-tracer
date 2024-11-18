@@ -1,14 +1,23 @@
-use crate::{camera::Camera, color::Color};
+use derivative::Derivative;
 
-#[derive(Debug)]
+use crate::{camera::Camera, color::Color, shape::Volume};
+
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Scene {
     camera: Camera,
     background: Color,
+    #[derivative(Debug = "ignore")]
+    shapes: Vec<Box<dyn Volume>>,
 }
 
 impl Scene {
-    pub fn new(camera: Camera, background: Color) -> Self {
-        Scene { camera, background }
+    pub fn new(camera: Camera, background: Color, shapes: Box<[Box<dyn Volume>]>) -> Self {
+        Scene {
+            camera,
+            background,
+            shapes: shapes.into(),
+        }
     }
 
     pub fn background(&self) -> Color {

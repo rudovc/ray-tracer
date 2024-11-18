@@ -49,7 +49,7 @@ fn main() -> Result<()> {
         768,
     );
 
-    let scene = Scene::new(camera, color::BLUE);
+    let scene = Scene::new(camera, color::BLUE, Box::new([]));
     let renderer = Renderer::new(1024, 768);
 
     'running: loop {

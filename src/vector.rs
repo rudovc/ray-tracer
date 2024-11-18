@@ -75,6 +75,7 @@ impl Vector3D {
             .get_or_init(self.len.get_or_init(self.squid().sqrt()))
     }
 
+    // "Squid" is a funny name for "Squared Euclidean distance"
     pub fn squid(&self) -> f64 {
         self.squid
             .get_or_init((self.x.abs()).powi(2) + (self.y.abs()).powi(2) + (self.z.abs()).powi(2))
