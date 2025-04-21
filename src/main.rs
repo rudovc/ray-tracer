@@ -1,17 +1,18 @@
+pub mod body;
 pub mod camera;
 pub mod color;
 pub mod lazy;
 pub mod ray;
 pub mod renderer;
 pub mod scene;
-pub mod shape;
+pub mod utils;
 pub mod vector;
+use body::Sphere;
 use camera::Camera;
 use color::Color;
 use color_eyre::Result;
 use renderer::{Coordinates2D, Renderer};
 use scene::Scene;
-use std::time::Duration;
 use vector::Vector3D;
 
 use sdl2::{event::Event, keyboard::Keycode, render::Canvas, video, VideoSubsystem};
@@ -42,14 +43,18 @@ fn main() -> Result<()> {
     let mut canvas = window.into_canvas().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let camera = Camera::new(
-        Vector3D::try_new(-4., 1., -5.).unwrap(),
-        vector::O,
-        1024,
-        768,
+    let camera = Camera::new(Vector3D::new(-4., 5., -5.), vector::O, 1024, 768);
+
+    let scene = Scene::new(
+        camera,
+        color::BLUE,
+        Box::new([Box::new(Sphere::new(
+            Vector3D::new(0., 0., 0.),
+            1.,
+            color::RED,
+        ))]),
     );
 
-    let scene = Scene::new(camera, color::BLUE, Box::new([]));
     let renderer = Renderer::new(1024, 768);
 
     'running: loop {
@@ -67,8 +72,6 @@ fn main() -> Result<()> {
         }
 
         canvas.present();
-
-        std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 
     Ok(())
