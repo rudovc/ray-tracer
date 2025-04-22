@@ -20,11 +20,15 @@ impl Ray {
         let distances = scene
             .bodies
             .iter()
-            .filter_map(|shape| shape.closest_ray_point(self))
-            .enumerate();
+            .enumerate()
+            .filter_map(|(index, shape)| {
+                shape
+                    .closest_ray_point(self)
+                    .map(|distance| (index, distance))
+            });
 
         let shortest_distance =
-            distances.min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Greater));
+            distances.min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Ordering::Greater));
 
         match shortest_distance {
             Some((index, _)) => scene.bodies[index].color(),

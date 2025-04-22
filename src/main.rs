@@ -17,9 +17,9 @@ use vector::Vector3D;
 
 use sdl2::{event::Event, keyboard::Keycode, render::Canvas, video, VideoSubsystem};
 
-fn initialize_window(video: VideoSubsystem) -> video::Window {
+fn initialize_window(video: VideoSubsystem, width: u16, height: u16) -> video::Window {
     video
-        .window("SDL2 tutorial", 1024, 768)
+        .window("SDL2 tutorial", width.into(), height.into())
         .position_centered()
         .build()
         .unwrap()
@@ -38,24 +38,33 @@ fn main() -> Result<()> {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
-    let window = initialize_window(video_subsystem);
+    let pixel_width = 1000;
+    let pixel_height = 1000;
+
+    let window = initialize_window(video_subsystem, pixel_width, pixel_height);
 
     let mut canvas = window.into_canvas().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let camera = Camera::new(Vector3D::new(-4., 5., -5.), vector::O, 1024, 768);
+    let camera = Camera::new(
+        Vector3D::new(-10., 10., -10.),
+        vector::O,
+        pixel_height,
+        pixel_width,
+    );
 
     let scene = Scene::new(
         camera,
-        color::BLUE,
-        Box::new([Box::new(Sphere::new(
-            Vector3D::new(0., 0., 0.),
-            1.,
-            color::RED,
-        ))]),
+        color::BLACK,
+        Box::new([
+            Box::new(Sphere::new(vector::O, 2., color::WHITE)),
+            Box::new(Sphere::new(Vector3D::new(10., 0., 0.), 2., color::RED)),
+            Box::new(Sphere::new(Vector3D::new(0., 10., 0.), 2., color::GREEN)),
+            Box::new(Sphere::new(Vector3D::new(0., 0., 10.), 2., color::BLUE)),
+        ]),
     );
 
-    let renderer = Renderer::new(1024, 768);
+    let renderer = Renderer::new(pixel_width, pixel_height);
 
     'running: loop {
         renderer.render(&mut canvas, &scene, &paint_pixel);

@@ -40,9 +40,8 @@ impl Camera {
 
         let direction = Vector3D::from(&position).to(&look_at).unit();
 
-        let right = direction.cross(&vector::Y).unit();
-
-        let up = right.cross(&direction).unit();
+        let right = vector::Y.cross(&direction).unit();
+        let up = right.cross(&direction).unit().invert();
 
         let aspect_ratio = width as f64 / height as f64;
 
@@ -66,11 +65,11 @@ impl Camera {
 
         let vx = self.right.scale(ndc_x);
 
-        // TODO: Investigate this second invert
-        let vy = self.up.scale(ndc_y).invert();
-        let direction = self.direction.add(&vx).add(&vy).unit();
+        let vy = self.up.scale(ndc_y);
 
-        let ray = Ray::new(&self.position, &direction);
+        let direction = self.direction.add(&vx).add(&vy);
+
+        let ray = Ray::new(&self.position, &direction.unit());
 
         ray.trace(scene)
     }
@@ -136,7 +135,7 @@ mod tests {
         ; "we")]
     #[test_case(
         0, 0,
-        (0,0,1)
+        (0, 0, 1)
         ; "trace misses sphere at corner pixel")]
     fn test_camera_trace_color(x: i32, y: i32, expected: (u8, u8, u8)) {
         let scene = make_test_scene();
@@ -149,16 +148,16 @@ mod tests {
     }
 
     #[test_case(0, 600, -0.9983333333333333     ; "ndc_x at left edge")]
-    #[test_case(300,600, 0.0016666666666667778   ; "ndc_x at center")]
-    #[test_case(599,600, 0.9983333333333333      ; "ndc_x at right edge")]
+    #[test_case(300, 600, 0.0016666666666667778   ; "ndc_x at center")]
+    #[test_case(599, 600, 0.9983333333333333      ; "ndc_x at right edge")]
     fn test_ndc_x(x: i32, width: u16, expected: f64) {
         let val = calculate_ndc_x(x, width);
         assert!(approx_eq(val, expected));
     }
 
     #[test_case(0, 600, 0.9983333333333333      ; "ndc_y at top edge")]
-    #[test_case(300,600, -0.0016666666666667778  ; "ndc_y at center")]
-    #[test_case(599,600, -0.9983333333333333     ; "ndc_y at bottom edge")]
+    #[test_case(300, 600, -0.0016666666666667778  ; "ndc_y at center")]
+    #[test_case(599, 600, -0.9983333333333333     ; "ndc_y at bottom edge")]
     fn test_ndc_y(y: i32, height: u16, expected: f64) {
         let val = calculate_ndc_y(y, height);
         assert!(approx_eq(val, expected));

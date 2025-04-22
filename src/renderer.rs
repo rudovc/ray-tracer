@@ -25,10 +25,7 @@ impl Renderer {
     ) {
         for pixel_y in 0..self.canvas_height {
             for pixel_x in 0..self.canvas_width {
-                let scene_x = (pixel_x as f32 / self.canvas_width as f32 - 0.5) * 1000.;
-                let scene_y = (pixel_y as f32 / self.canvas_height as f32 - 0.5) * 1000.;
-
-                let pixel_color = scene.trace(scene_x as i32, scene_y as i32);
+                let pixel_color = scene.trace(pixel_x as i32, pixel_y as i32);
 
                 paint_callback(canvas, (pixel_x, pixel_y), pixel_color);
             }
