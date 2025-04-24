@@ -72,15 +72,15 @@ mod tests {
             Color::new(sphere_color.0, sphere_color.1, sphere_color.2),
         );
 
-        let dummy_camera = crate::camera::Camera::new(
-            Vector3D::new(0.0, 0.0, -10.0),
-            Vector3D::new(0.0, 0.0, 0.0),
+        let mut dummy_camera = crate::camera::Camera::new(
+            &Vector3D::new(0.0, 0.0, -10.0),
+            &Vector3D::new(0.0, 0.0, 0.0),
             800,
             600,
         );
 
         let scene = Scene::new(
-            dummy_camera,
+            &mut dummy_camera,
             Color::new(5, 5, 5),
             Box::new([Box::new(sphere)]),
         );

@@ -52,7 +52,7 @@ impl Color {
         match color.chars().count() {
             6 => {
                 let six_digit_regex = Regex::new(r"#([\da-f]{2})([\da-f]{2})([\da-f]{2})/i")?;
-                return if let Some((_, [r, g, b])) =
+                if let Some((_, [r, g, b])) =
                     six_digit_regex.captures(&color).map(|c| c.extract())
                 {
                     let (r, g, b) = (r.parse()?, g.parse()?, b.parse()?);
@@ -60,11 +60,11 @@ impl Color {
                     Ok(Color { r, g, b })
                 } else {
                     Err(eyre!(r#"Error parsing color from string: "{color}""#))
-                };
+                }
             }
             3 => {
                 let three_digit_regex = Regex::new(r"#([\da-f])([\da-f])([\da-f])")?;
-                return if let Some((_, [r, g, b])) =
+                if let Some((_, [r, g, b])) =
                     three_digit_regex.captures(&color).map(|c| c.extract())
                 {
                     let (r, g, b) = (r.parse()?, g.parse()?, b.parse()?);
@@ -72,7 +72,7 @@ impl Color {
                     Ok(Color { r, g, b })
                 } else {
                     Err(eyre!(r#"Error parsing color from string: "{color}""#))
-                };
+                }
             }
             _ => {
                 if color.starts_with("rgb(") && color.ends_with(')') && color.len() == 10 {
@@ -113,7 +113,7 @@ impl From<(u8, u8, u8)> for Color {
 
 impl From<&Color> for Color {
     fn from(color: &Color) -> Self {
-        color.clone()
+        *color
     }
 }
 

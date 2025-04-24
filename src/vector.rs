@@ -49,7 +49,7 @@ impl Vector3D {
         self.z
     }
 
-    fn length(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         self.len
             .get_or_init(self.len.get_or_init(self.squid().sqrt()))
     }

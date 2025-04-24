@@ -31,24 +31,26 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(position: Vector3D, look_at: Vector3D, width: u16, height: u16) -> Self {
+    pub fn new(position: &Vector3D, look_at: &Vector3D, width: u16, height: u16) -> Self {
         let position = if position.x() == look_at.x() && position.z() == look_at.z() {
             position.add(&Vector3D::new(0., 0., -0.0000001))
         } else {
-            position
+            Vector3D::new(position.x(), position.y(), position.z())
         };
 
-        let direction = Vector3D::from(&position).to(&look_at).unit();
+        let direction = Vector3D::from(&position).to(look_at).unit();
 
-        let right = vector::Y.cross(&direction).unit();
-        let up = right.cross(&direction).unit().invert();
+        let right = vector::Y.cross(&direction).unit().invert();
+        let up = right.cross(&direction).unit();
 
         let aspect_ratio = width as f64 / height as f64;
+
+        let target = Vector3D::new(look_at.x(), look_at.y(), look_at.z());
 
         Camera {
             aspect_ratio,
             position,
-            target: look_at,
+            target,
             direction,
             width,
             height,
@@ -77,6 +79,25 @@ impl Camera {
     pub fn resolution(&self) -> Resolution {
         (self.width, self.height)
     }
+
+    pub fn move_to(&mut self, new_position: Vector3D) {
+        let position = if new_position.x() == self.target.x() && new_position.z() == self.target.z()
+        {
+            new_position.add(&Vector3D::new(0., 0., -0.0000001))
+        } else {
+            new_position
+        };
+
+        let direction = Vector3D::from(&position).to(&self.target).unit();
+
+        let right = vector::Y.cross(&direction).unit().invert();
+        let up = right.cross(&direction).unit();
+
+        self.position = position;
+        self.direction = direction;
+        self.right = right;
+        self.up = up;
+    }
 }
 
 #[cfg(test)]
@@ -84,17 +105,6 @@ mod tests {
     use super::*;
     use crate::{body::Sphere, color::Color, scene::Scene, utils::approx_eq, vector::Vector3D};
     use test_case::test_case;
-
-    fn make_test_scene() -> Scene {
-        let cam = Camera::new(
-            Vector3D::new(0.0, 0.0, -5.0),
-            Vector3D::new(0.0, 0.0, 0.0),
-            600,
-            600,
-        );
-        let sphere = Sphere::new(Vector3D::new(0.0, 0.0, 0.0), 1.0, Color::new(1, 0, 0));
-        Scene::new(cam, Color::new(0, 0, 1), Box::new([Box::new(sphere)]))
-    }
 
     #[test_case(
         Vector3D::new(0.0, 0.0, 5.0),
@@ -114,7 +124,7 @@ mod tests {
         exp_right: Vector3D,
         exp_up: Vector3D,
     ) {
-        let cam = Camera::new(pos.clone(), look.clone(), w, h);
+        let cam = Camera::new(&pos, &look, w, h);
 
         assert!(approx_eq(cam.direction.x(), exp_dir.x()));
         assert!(approx_eq(cam.direction.y(), exp_dir.y()));
@@ -138,7 +148,14 @@ mod tests {
         (0, 0, 1)
         ; "trace misses sphere at corner pixel")]
     fn test_camera_trace_color(x: i32, y: i32, expected: (u8, u8, u8)) {
-        let scene = make_test_scene();
+        let mut cam = Camera::new(
+            &Vector3D::new(0.0, 0.0, -5.0),
+            &Vector3D::new(0.0, 0.0, 0.0),
+            600,
+            600,
+        );
+        let sphere = Sphere::new(Vector3D::new(0.0, 0.0, 0.0), 1.0, Color::new(1, 0, 0));
+        let scene = Scene::new(&mut cam, Color::new(0, 0, 1), Box::new([Box::new(sphere)]));
         let color = scene.trace(x, y);
 
         assert_eq!(
@@ -161,5 +178,47 @@ mod tests {
     fn test_ndc_y(y: i32, height: u16, expected: f64) {
         let val = calculate_ndc_y(y, height);
         assert!(approx_eq(val, expected));
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    #[test_case(
+        Vector3D::new(5.0, 0.0, 0.0),
+        Vector3D::new(0.0, 0.0,  0.0),
+        Vector3D::new(0.0, 0.0, 5.0),
+        600,
+        600,
+        Vector3D::new(0.0, 0.0, -1.0),
+        Vector3D::new(1.0, 0.0, 0.0),
+        Vector3D::new(0.0, 1.0, 0.0)
+        ; "camera move to axes aligned with world axes")]
+    fn test_camera_move_to_axes(
+        initial_pos: Vector3D,
+        look: Vector3D,
+        new_pos: Vector3D,
+        w: u16,
+        h: u16,
+        exp_dir: Vector3D,
+        exp_right: Vector3D,
+        exp_up: Vector3D,
+    ) {
+        let mut cam = Camera::new(&initial_pos, &look, w, h);
+
+        dbg!(&cam);
+
+        cam.move_to(new_pos);
+
+        dbg!(&cam);
+
+        assert!(approx_eq(cam.direction.x(), exp_dir.x()));
+        assert!(approx_eq(cam.direction.y(), exp_dir.y()));
+        assert!(approx_eq(cam.direction.z(), exp_dir.z()));
+
+        assert!(approx_eq(cam.right.x(), exp_right.x()));
+        assert!(approx_eq(cam.right.y(), exp_right.y()));
+        assert!(approx_eq(cam.right.z(), exp_right.z()));
+
+        assert!(approx_eq(cam.up.x(), exp_up.x()));
+        assert!(approx_eq(cam.up.y(), exp_up.y()));
+        assert!(approx_eq(cam.up.z(), exp_up.z()));
     }
 }
