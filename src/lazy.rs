@@ -1,6 +1,6 @@
 use std::cell::OnceCell;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Lazy<T> {
     Lazy(OnceCell<T>),
     Eager(T),

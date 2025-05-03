@@ -1,4 +1,7 @@
-use std::cell::OnceCell;
+use std::{
+    cell::OnceCell,
+    ops::{Add, Mul, Sub},
+};
 
 use crate::lazy::Lazy;
 
@@ -7,18 +10,85 @@ pub struct FromToVector3D {
 }
 
 impl FromToVector3D {
-    pub fn to(&self, destination: &Vector3D) -> Vector3D {
+    pub fn to(self, destination: &Vector3D) -> Vector3D {
         destination.subtract(&self.from)
+    }
+
+    pub fn for_distance(self, distance: f64) -> Vector3D {
+        let factor = distance + self.from.length();
+        let total = &self.from * factor;
+
+        total - self.from
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vector3D {
     x: f64,
     y: f64,
     z: f64,
     len: Lazy<f64>,
     squid: Lazy<f64>,
+}
+
+impl<T> Mul<T> for Vector3D
+where
+    T: Into<f64>,
+{
+    type Output = Vector3D;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        self.scale(rhs.into())
+    }
+}
+
+impl<T> Mul<T> for &Vector3D
+where
+    T: Into<f64>,
+{
+    type Output = Vector3D;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        self.scale(rhs.into())
+    }
+}
+
+impl Add for Vector3D {
+    type Output = Vector3D;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.append(&rhs)
+    }
+}
+
+impl Add for &Vector3D {
+    type Output = Vector3D;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.append(rhs)
+    }
+}
+
+impl Sub for Vector3D {
+    type Output = Vector3D;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.subtract(&rhs)
+    }
+}
+
+impl Sub for &Vector3D {
+    type Output = Vector3D;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.subtract(rhs)
+    }
+}
+
+impl PartialOrd for Vector3D {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.length().partial_cmp(&other.length())
+    }
 }
 
 impl std::fmt::Display for Vector3D {
@@ -108,7 +178,7 @@ impl Vector3D {
         }
     }
 
-    pub fn add(&self, addend: &Vector3D) -> Self {
+    pub fn append(&self, addend: &Vector3D) -> Self {
         Vector3D {
             x: self.x + addend.x,
             y: self.y + addend.y,
@@ -259,7 +329,15 @@ mod tests {
     fn test_add(ax: f64, ay: f64, az: f64, bx: f64, by: f64, bz: f64, sx: f64, sy: f64, sz: f64) {
         let a = Vector3D::new(ax, ay, az);
         let b = Vector3D::new(bx, by, bz);
-        let sum = a.add(&b);
+        let sum = a.append(&b);
+        assert!(approx_eq(sum.x(), sx));
+        assert!(approx_eq(sum.y(), sy));
+        assert!(approx_eq(sum.z(), sz));
+        let sum = &a + &b;
+        assert!(approx_eq(sum.x(), sx));
+        assert!(approx_eq(sum.y(), sy));
+        assert!(approx_eq(sum.z(), sz));
+        let sum = b + a;
         assert!(approx_eq(sum.x(), sx));
         assert!(approx_eq(sum.y(), sy));
         assert!(approx_eq(sum.z(), sz));
@@ -287,6 +365,15 @@ mod tests {
         assert!(approx_eq(diff.x(), rx));
         assert!(approx_eq(diff.y(), ry));
         assert!(approx_eq(diff.z(), rz));
+        let diff = &a - &b;
+        assert!(approx_eq(diff.x(), rx));
+        assert!(approx_eq(diff.y(), ry));
+        assert!(approx_eq(diff.z(), rz));
+        let diff = b - a;
+        let result = Vector3D::new(rx, ry, rz).invert();
+        assert!(approx_eq(diff.x(), result.x()));
+        assert!(approx_eq(diff.y(), result.y()));
+        assert!(approx_eq(diff.z(), result.z()));
     }
 
     #[test_case(2.0, -4.0, 0.5, 3.0, 6.0, -12.0, 1.5 ; "scale by factor")]
@@ -294,6 +381,10 @@ mod tests {
     fn test_scale(vx: f64, vy: f64, vz: f64, factor: f64, sx: f64, sy: f64, sz: f64) {
         let v = Vector3D::new(vx, vy, vz);
         let scaled = v.scale(factor);
+        assert!(approx_eq(scaled.x(), sx));
+        assert!(approx_eq(scaled.y(), sy));
+        assert!(approx_eq(scaled.z(), sz));
+        let scaled = v * factor;
         assert!(approx_eq(scaled.x(), sx));
         assert!(approx_eq(scaled.y(), sy));
         assert!(approx_eq(scaled.z(), sz));

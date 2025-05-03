@@ -23,7 +23,7 @@ impl Ray {
             .enumerate()
             .filter_map(|(index, shape)| {
                 shape
-                    .closest_ray_point(self)
+                    .closest_ray_distance(self)
                     .map(|distance| (index, distance))
             });
 

@@ -2,7 +2,11 @@ pub const THRESHOLD: f64 = f64::EPSILON * 3.;
 
 use std::cmp::Ordering;
 
-use crate::{color::Color, ray::Ray, vector::Vector3D};
+use crate::{
+    color::{self, Color},
+    ray::Ray,
+    vector::Vector3D,
+};
 
 #[derive(Debug)]
 pub struct Body {
@@ -26,8 +30,11 @@ impl Colored for Body {
 }
 
 pub trait Volume {
-    fn closest_ray_point(&self, ray: &Ray) -> Option<f64>;
+    fn closest_ray_distance(&self, ray: &Ray) -> Option<f64>;
+    fn closest_ray_point(&self, ray: &Ray) -> Option<Vector3D>;
     fn intersect(&self, ray: &Ray) -> Vec<f64>;
+    fn get_normal_at(&self, point: &Vector3D) -> Vector3D;
+    fn get_color_at(&self, point: &Vector3D) -> Color;
 }
 
 pub trait Renderable: Volume + Colored {}
@@ -75,13 +82,33 @@ impl Volume for Sphere {
         }
     }
 
-    fn closest_ray_point(&self, ray: &Ray) -> Option<f64> {
+    fn closest_ray_distance(&self, ray: &Ray) -> Option<f64> {
         let distances = self
             .intersect(ray)
             .into_iter()
             .filter(|distance| *distance > THRESHOLD);
 
         distances.min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Greater))
+    }
+
+    fn closest_ray_point(&self, ray: &Ray) -> Option<Vector3D> {
+        todo!();
+        // let point = Vector3D::from(&ray.start)
+        //
+        // self.closest_ray_distance(&ray)
+        //     .map(|distance| &ray)
+    }
+
+    fn get_normal_at(&self, point: &Vector3D) -> Vector3D {
+        point.to(&self.center)
+    }
+
+    fn get_color_at(&self, point: &Vector3D) -> Color {
+        let normal = self.get_normal_at(point);
+        let shadow_color = color::BLACK;
+        // TODO: Based on lights in the scene, calculate the color at the requested point
+
+        self.color()
     }
 }
 
@@ -143,7 +170,7 @@ mod tests {
         assert!(intersections.iter().all(|t| t.is_finite()));
         intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
         assert_eq!(intersections, expected_ts);
-        let closest = sphere.closest_ray_point(&ray);
+        let closest = sphere.closest_ray_distance(&ray);
         assert_eq!(closest, expected_closest);
     }
 }

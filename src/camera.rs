@@ -33,7 +33,7 @@ pub struct Camera {
 impl Camera {
     pub fn new(position: &Vector3D, look_at: &Vector3D, width: u16, height: u16) -> Self {
         let position = if position.x() == look_at.x() && position.z() == look_at.z() {
-            position.add(&Vector3D::new(0., 0., -0.0000001))
+            position.append(&Vector3D::new(0., 0., -0.0000001))
         } else {
             Vector3D::new(position.x(), position.y(), position.z())
         };
@@ -69,7 +69,7 @@ impl Camera {
 
         let vy = self.up.scale(ndc_y);
 
-        let direction = self.direction.add(&vx).add(&vy);
+        let direction = self.direction.append(&vx).append(&vy);
 
         let ray = Ray::new(&self.position, &direction.unit());
 
@@ -83,7 +83,7 @@ impl Camera {
     pub fn move_to(&mut self, new_position: Vector3D) {
         let position = if new_position.x() == self.target.x() && new_position.z() == self.target.z()
         {
-            new_position.add(&Vector3D::new(0., 0., -0.0000001))
+            new_position.append(&Vector3D::new(0., 0., -0.0000001))
         } else {
             new_position
         };
