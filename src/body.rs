@@ -2,11 +2,7 @@ pub const THRESHOLD: f64 = f64::EPSILON * 3.;
 
 use std::cmp::Ordering;
 
-use crate::{
-    color::{self, Color},
-    ray::Ray,
-    vector::Vector3D,
-};
+use crate::{color::Color, ray::Ray, vector::Vector3D};
 
 #[derive(Debug)]
 pub struct Body {
@@ -92,20 +88,20 @@ impl Volume for Sphere {
     }
 
     fn closest_ray_point(&self, ray: &Ray) -> Option<Vector3D> {
-        todo!();
-        // let point = Vector3D::from(&ray.start)
-        //
-        // self.closest_ray_distance(&ray)
-        //     .map(|distance| &ray)
+        self.closest_ray_distance(ray)
+            .map(|distance| {
+                Vector3D::from(&ray.start).for_distance_in_direction(distance, &ray.direction)
+            })
+            .and_then(|result| result.ok())
     }
 
     fn get_normal_at(&self, point: &Vector3D) -> Vector3D {
         point.to(&self.center)
     }
 
-    fn get_color_at(&self, point: &Vector3D) -> Color {
-        let normal = self.get_normal_at(point);
-        let shadow_color = color::BLACK;
+    fn get_color_at(&self, _point: &Vector3D) -> Color {
+        // let normal = self.get_normal_at(point);
+        // let shadow_color = color::BLACK;
         // TODO: Based on lights in the scene, calculate the color at the requested point
 
         self.color()
@@ -144,22 +140,23 @@ mod tests {
     }
 
     #[test_case(
-        (0.0, 0.0, 5.0), (0.0, 1.0, 0.0), vec![], None
+        (0.0, 0.0, 5.0), (0.0, 1.0, 0.0), vec![], None, None
         ; "ray misses sphere")]
     #[test_case(
-        (1.0, -5.0, 0.0), (0.0, 1.0, 0.0), vec![5.0], Some(5.0)
+        (1.0, -5.0, 0.0), (0.0, 1.0, 0.0), vec![5.0], Some(5.0), Some(Vector3D::new(1.0, 0.0, 0.0))
         ; "ray tangent to sphere returns correct t = -b/2")]
     #[test_case(
-        (0.0, 0.0, -5.0), (0.0, 0.0, 1.0), vec![4.0, 6.0], Some(4.0)
+        (0.0, 0.0, -5.0), (0.0, 0.0, 1.0), vec![4.0, 6.0], Some(4.0), Some(Vector3D::new(0.0, 0.0, -1.0))
         ; "ray pierces sphere twice")]
     #[test_case(
-        (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), vec![-1.0, 1.0], Some(1.0)
+        (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), vec![-1.0, 1.0], Some(1.0), Some(Vector3D::new(1.0, 0.0, 0.0))
         ; "ray origin inside sphere")]
     fn test_sphere_intersection(
         start: (f64, f64, f64),
         direction: (f64, f64, f64),
         expected_ts: Vec<f64>,
-        expected_closest: Option<f64>,
+        expected_closest_distance: Option<f64>,
+        expected_closest_point: Option<Vector3D>,
     ) {
         let sphere = Sphere::new(Vector3D::new(0.0, 0.0, 0.0), 1.0, Color::new(0, 0, 0));
         let ray = Ray {
@@ -171,6 +168,8 @@ mod tests {
         intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
         assert_eq!(intersections, expected_ts);
         let closest = sphere.closest_ray_distance(&ray);
-        assert_eq!(closest, expected_closest);
+        assert_eq!(closest, expected_closest_distance);
+        let closest = sphere.closest_ray_point(&ray);
+        assert_eq!(closest, expected_closest_point);
     }
 }

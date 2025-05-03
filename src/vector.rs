@@ -3,6 +3,8 @@ use std::{
     ops::{Add, Mul, Sub},
 };
 
+use color_eyre::eyre::{eyre, Result};
+
 use crate::lazy::Lazy;
 
 pub struct FromToVector3D {
@@ -11,24 +13,69 @@ pub struct FromToVector3D {
 
 impl FromToVector3D {
     pub fn to(self, destination: &Vector3D) -> Vector3D {
-        destination.subtract(&self.from)
+        destination - &self.from
     }
 
-    pub fn for_distance(self, distance: f64) -> Vector3D {
+    pub fn for_distance(self, distance: f64) -> Result<Vector3D> {
         let factor = distance + self.from.length();
         let total = &self.from * factor;
+        let result = total - self.from;
 
-        total - self.from
+        if result.length() == 0. {
+            return Err(eyre!(
+                "A vector of length 0 has no direction and can't be extended for a distance"
+            ));
+        }
+
+        Ok(result)
+    }
+
+    pub fn for_distance_in_direction(
+        self,
+        distance: f64,
+        direction: &Vector3D,
+    ) -> Result<Vector3D> {
+        let direction = direction.unit();
+        let total = &direction * distance;
+        let result = &self.from + &total;
+
+        if result.length() == 0. {
+            return Err(eyre!(
+                "A vector of length 0 has no direction and can't be extended for a distance"
+            ));
+        }
+
+        Ok(result)
+    }
+
+    pub fn to_distance_in_direction(self, distance: f64, direction: &Vector3D) -> Result<Vector3D> {
+        let direction = direction.unit();
+        let total = &direction * distance;
+        let result = &self.from + &total;
+
+        if result.length() == 0. {
+            return Err(eyre!(
+                "A vector of length 0 has no direction and can't be extended for a distance"
+            ));
+        }
+
+        Ok(self.to(&result))
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Vector3D {
     x: f64,
     y: f64,
     z: f64,
     len: Lazy<f64>,
     squid: Lazy<f64>,
+}
+
+impl PartialEq for Vector3D {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
 }
 
 impl<T> Mul<T> for Vector3D
@@ -440,6 +487,22 @@ mod tests {
         let origin = Vector3D::new(ox, oy, oz);
         let dest = Vector3D::new(dx, dy, dz);
         let v = Vector3D::from(&origin).to(&dest);
+        assert!(approx_eq(v.x(), dx - ox));
+        assert!(approx_eq(v.y(), dy - oy));
+        assert!(approx_eq(v.z(), dz - oz));
+    }
+
+    #[test_case(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 3f64.sqrt(); "from() to() and for_distance() yields correct difference")]
+    fn test_from_for_distance(ox: f64, oy: f64, oz: f64, dx: f64, dy: f64, dz: f64, dist: f64) {
+        let origin = Vector3D::new(ox, oy, oz);
+        let dest = Vector3D::new(dx, dy, dz);
+        let v = Vector3D::from(&origin).to(&dest);
+        assert!(approx_eq(v.x(), dx - ox));
+        assert!(approx_eq(v.y(), dy - oy));
+        assert!(approx_eq(v.z(), dz - oz));
+        let v = Vector3D::from(&origin)
+            .for_distance_in_direction(dist, &v.unit())
+            .unwrap();
         assert!(approx_eq(v.x(), dx - ox));
         assert!(approx_eq(v.y(), dy - oy));
         assert!(approx_eq(v.z(), dz - oz));

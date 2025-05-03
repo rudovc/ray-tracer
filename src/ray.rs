@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+use color_eyre::eyre::Result;
+
 use crate::{color::Color, scene::Scene, vector::Vector3D};
 
 #[derive(Debug)]
@@ -16,23 +18,25 @@ impl Ray {
         }
     }
 
-    pub fn trace(&self, scene: &Scene) -> Color {
-        let distances = scene
+    pub fn trace(&self, scene: &Scene) -> Result<Color> {
+        let shortest_distance = scene
             .bodies
             .iter()
-            .enumerate()
-            .filter_map(|(index, shape)| {
-                shape
-                    .closest_ray_distance(self)
-                    .map(|distance| (index, distance))
-            });
+            .filter_map(|shape| {
+                let distance = shape.closest_ray_distance(self);
 
-        let shortest_distance =
-            distances.min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Ordering::Greater));
+                distance.and_then(|distance| Some((distance, shape)))
+            })
+            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Greater));
 
         match shortest_distance {
-            Some((index, _)) => scene.bodies[index].color(),
-            None => scene.background(),
+            Some((distance, shape)) => {
+                let way = Vector3D::from(&self.start)
+                    .for_distance_in_direction(distance, &self.direction)?;
+
+                Ok(shape.get_color_at(&way))
+            }
+            None => Ok(scene.background()),
         }
     }
 }
@@ -85,7 +89,7 @@ mod tests {
             Box::new([Box::new(sphere)]),
         );
 
-        let result_color = ray.trace(&scene);
+        let result_color = ray.trace(&scene).unwrap();
         assert_eq!(
             result_color.rgba(),
             Color::new(expected_color.0, expected_color.1, expected_color.2).rgba()

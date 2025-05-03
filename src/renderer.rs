@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use sdl2::render::Canvas;
 
 use crate::{color::Color, scene::Scene};
@@ -22,13 +23,15 @@ impl Renderer {
         canvas: &mut Canvas<sdl2::video::Window>,
         scene: &Scene,
         paint_callback: &dyn Fn(&mut Canvas<sdl2::video::Window>, Coordinates2D, Color),
-    ) {
+    ) -> Result<()> {
         for pixel_y in 0..self.canvas_height {
             for pixel_x in 0..self.canvas_width {
-                let pixel_color = scene.trace(pixel_x as i32, pixel_y as i32);
+                let pixel_color = scene.trace(pixel_x as i32, pixel_y as i32)?;
 
                 paint_callback(canvas, (pixel_x, pixel_y), pixel_color);
             }
         }
+
+        Ok(())
     }
 }

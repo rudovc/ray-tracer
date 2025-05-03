@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use derivative::Derivative;
 
 use crate::{body::Renderable, camera::Camera, color::Color, vector::Vector3D};
@@ -30,7 +31,7 @@ impl<'a> Scene<'a> {
         self.background
     }
 
-    pub fn trace(&self, x: i32, y: i32) -> Color {
+    pub fn trace(&self, x: i32, y: i32) -> Result<Color> {
         self.camera.trace(self, x, y)
     }
 

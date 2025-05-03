@@ -1,3 +1,5 @@
+use color_eyre::eyre::Result;
+
 use crate::{
     color::Color,
     ray::Ray,
@@ -61,7 +63,7 @@ impl Camera {
     }
 
     // TODO: Revisit for arbitrary FOV and aspect ratio
-    pub fn trace(&self, scene: &Scene, x: i32, y: i32) -> Color {
+    pub fn trace(&self, scene: &Scene, x: i32, y: i32) -> Result<Color> {
         let ndc_x = calculate_ndc_x(x, self.width);
         let ndc_y = calculate_ndc_y(y, self.height);
 
@@ -156,7 +158,7 @@ mod tests {
         );
         let sphere = Sphere::new(Vector3D::new(0.0, 0.0, 0.0), 1.0, Color::new(1, 0, 0));
         let scene = Scene::new(&mut cam, Color::new(0, 0, 1), Box::new([Box::new(sphere)]));
-        let color = scene.trace(x, y);
+        let color = scene.trace(x, y).unwrap();
 
         assert_eq!(
             color.rgba(),
